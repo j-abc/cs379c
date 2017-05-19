@@ -26,6 +26,7 @@ addpath('tools/');
 
 clear;
 clc;
+close all;
 
 nstim = 1000; % number of stimuli
 nsevar = 1; %  noise variance
@@ -33,29 +34,52 @@ nsevar = 1; %  noise variance
 % true filter with spatial dimension nx, difference of two Gaussians.
 filterdims = 100;
 ktrue = genkTrue(filterdims); % ktrue in 1d
-% plot(ktrue);
+
+
+figure(1);
+subplot(2,2,1);
+
+plot(ktrue);
+xlabel('l (space)');
+ylabel('k weighting');
+title('True filter');
 
 % 1. generate stimuli (choose either 1/f stimuli or white noise stimuli)
 whichstim = 2; % white noise stimuli, if you want 1/f stimuli, set "whichstim=1"
-Stimuli = genStim(filterdims, nstim, whichstim);
- 
+Stimuli = genStim(filterdims, nstim, whichstim); 
+
+subplot(2,2,2)
+plot(Stimuli.xTraining'); hold on;
+plot(mean(Stimuli.xTraining',2),'w','LineWidth',4);
+xlabel('l (space)'); 
+ylabel('x (intensity)'); 
+title(sprintf('%0.f white noise stimuli, white: mean across stimuli',length(Stimuli.xTraining(:,1))))
+
 % 2. generate noisy response: training & test data
 ytraining = Stimuli.xTraining*ktrue + randn(nstim,1)*nsevar; % training data
-% ytest = Stimuli.xTest*ktrue + randn(nstim,1)*nsevar; % test data (for cross-validation)
+ytest = Stimuli.xTest*ktrue + randn(nstim,1)*nsevar; % test data (for cross-validation)
+
+subplot(2,2,3);
+hist(ytraining); hold on;
+ylabel('n_samples'); xlabel('y (spike rate)');
+title('distribution of spike rates among samples');
 
 % 3. ALDs,f,sf, ML, and ridge regression
 nkt = 1; 
 [khatALD kridge] = runALD(Stimuli.xTraining, ytraining, filterdims, nkt);
 
-figure(1); 
+subplot(2,2,4);
 plot([ktrue, kridge, khatALD.khatSF]);
 legend('true', 'ridge', 'ALDsf');
+xlabel('l (space)');
+ylabel('k weighting');
+title('filter estimations');
 
 %% 2D stimuli example
-
 clear;
 clc;
 
+% INITIALIZE HYPS
 nstim = 2500; % number of samples
 nsevar = 1; % noise variance
 
@@ -64,29 +88,38 @@ ny = 18;
 nx = 18; 
 filterdims = [ny; nx]; % spatial dimensions
 ktrue = genkTrue(filterdims); % ktrue in 2d
-% plot(ktrue(:)); imagesc(ktrue); colormap gray ; axis xy
 
-RF_reshaped = reshape(ktrue, [], 1);
+figure(2);
+subplot(141);
+imagesc(ktrue); colormap gray ; axis image;
+title('true filter');
+
+RF_reshaped = reshape(ktrue, [], 1);  % flattened
 
 % 1. generate stimuli (choose either 1/f stimuli or white noise stimuli)
 whichstim = 2; % white noise stimuli, if you want 1/f stimuli, set "whichstim=1"
 Stimuli = genStim(filterdims, nstim, whichstim);
 
+stimg_in = permute(reshape(Stimuli.xTraining, [2500, 18, 18]),[2 3 1]);
+
+subplot(142);
+imagesc(mean(stimg_in,3)); colormap gray; axis image; caxis([-nsevar nsevar]);
+title('mean stim')
+
 % 2. generate noisy response: training & test data
 ytraining = Stimuli.xTraining*RF_reshaped + randn(nstim,1)*nsevar; % training data
-% ytest = Stimuli.xTest*RF_reshaped + randn(nstim,1)*nsevar; % test data
+ytest = Stimuli.xTest*RF_reshaped + randn(nstim,1)*nsevar; % test data
+% ytraining: nsamp x 1
 
 % 3. ALDs,f,sf, ML, and ridge regression
 nkt=1;
-[khatALD kridge] = runALD(Stimuli.xTraining, ytraining, filterdims, nkt);
+[khatALD, kridge] = runALD(Stimuli.xTraining, ytraining, filterdims, nkt);
 
-figure(2);
-subplot(131);imagesc(ktrue); colormap gray; axis image; title('true');
-subplot(132);imagesc(reshape(kridge, ny, nx)); axis image; title('ridge');
-subplot(133);imagesc(reshape(khatALD.khatSF, ny, nx)); axis image; title('ALDsf');
+% subplot(141);imagesc(ktrue); colormap gray; axis image; title('true');
+subplot(143);imagesc(reshape(kridge, ny, nx)); axis image; title('ridge');
+subplot(144);imagesc(reshape(khatALD.khatSF, ny, nx)); axis image; title('ALDsf');
 
 %% 3D stimuli example
-
 clear;
 clc;
 
