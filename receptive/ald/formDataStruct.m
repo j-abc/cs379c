@@ -74,7 +74,6 @@ elseif (lengspatialdims==2)
     
 else
     fprintf('this package does not support stimuli in higher than 3D.');
-    
 end
 
 

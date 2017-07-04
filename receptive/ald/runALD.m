@@ -29,7 +29,7 @@ function [khatALD, kRidge] = runALD(x, y, spatialdims, nkt)
 % khatALD.khatF    RF estimate obtained by ALDf
 % khatALD.khatSF   RF estimate obtained by ALDsf
 %
-% khatALD.thetaS   estimated hyperparameters in ALDs
+% khatALD.thetaS   estimated hyperparameters in ALDsn
 % khatALD.thetaF   estimated hyperparameters in ALDf
 % khatALD.thetaSF  estimated hyperparameters in ALDsf
 %
@@ -60,7 +60,10 @@ opts0.tol = 1e-6;  % stopping tolerance
 lam0 = 10;  % Initial ratio of nsevar to prior var (ie, nsevar*alpha)
 % ovsc: overall scale, nasevar: noise variance
 [kRidge, ovsc ,nsevar]  =  runRidge(lam0, datastruct, opts0);
+% keyboard;
 
+%%
+% kRidge = zeros(size(kRidge))
 %% 1. ALDs
 
 % options: ALDs uses trust-region algorithm with analytic gradients and Hessians

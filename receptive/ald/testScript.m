@@ -84,8 +84,8 @@ nstim = 2500; % number of samples
 nsevar = 1; % noise variance
 
 % true filter (2d-Gabor) with length ny by nx
-ny = 18;
-nx = 18; 
+ny = 28;
+nx = 16; % mirror the size of our receptive fields 
 filterdims = [ny; nx]; % spatial dimensions
 ktrue = genkTrue(filterdims); % ktrue in 2d
 
@@ -95,12 +95,13 @@ imagesc(ktrue); colormap gray ; axis image;
 title('true filter');
 
 RF_reshaped = reshape(ktrue, [], 1);  % flattened
+RF_reshaped = 0.01*ones(size(RF_reshaped))
 
 % 1. generate stimuli (choose either 1/f stimuli or white noise stimuli)
 whichstim = 2; % white noise stimuli, if you want 1/f stimuli, set "whichstim=1"
 Stimuli = genStim(filterdims, nstim, whichstim);
 
-stimg_in = permute(reshape(Stimuli.xTraining, [2500, 18, 18]),[2 3 1]);
+stimg_in = permute(reshape(Stimuli.xTraining, [2500, nx, ny]),[2 3 1]);
 
 subplot(142);
 imagesc(mean(stimg_in,3)); colormap gray; axis image; caxis([-nsevar nsevar]);
@@ -111,9 +112,11 @@ ytraining = Stimuli.xTraining*RF_reshaped + randn(nstim,1)*nsevar; % training da
 ytest = Stimuli.xTest*RF_reshaped + randn(nstim,1)*nsevar; % test data
 % ytraining: nsamp x 1
 
+%%
 % 3. ALDs,f,sf, ML, and ridge regression
 nkt=1;
 [khatALD, kridge] = runALD(Stimuli.xTraining, ytraining, filterdims, nkt);
+
 
 % subplot(141);imagesc(ktrue); colormap gray; axis image; title('true');
 subplot(143);imagesc(reshape(kridge, ny, nx)); axis image; title('ridge');
@@ -129,8 +132,8 @@ nsevar = 0.5; % noise variance
 % true filter (3d-Gabor) with length nt by ny by nx
 % Note: if total dimensionality is too high, this code becomes slow (our future work will solve this issue).        
 nkt = 8;
-ny = 6;
-nx = 6; 
+ny = 28;
+nx = 16; 
 
 spatialdims = [ny; nx]; % spatial dimension of input stimulus
 filterdims = [nkt; spatialdims]; % filter dimensions
@@ -155,7 +158,7 @@ ytraining = Stimuli.xTraining*RF_reshaped + randn(nstim,1)*nsevar; % training da
 % ytest = Stimuli.xTest*RF_reshaped + randn(nstim,1)*nsevar; % test data
 
 % 3. ALDs,f,sf, ML, and ridge regression
-[khatALD kRidge] = runALD(Stimuli.xraw_training, ytraining, spatialdims, nkt);
+[khatALD, kRidge] = runALD(Stimuli.xraw_training, ytraining, spatialdims, nkt);
 
 % 4. plot ALDsf estimate
 kRidge_rsh = permute(reshape(kRidge, [nkt, spatialdims(1), spatialdims(2)]), [2 3 1]);

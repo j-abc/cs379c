@@ -94,7 +94,7 @@ switch leng_ndims
         Lmult(inds) = v_phi;
         Lmult = Lmult.*Lmult';
         L = v_gam*v_gam';
-        L = L.*Lmult;
+        L = L.*Lmult; 
         
         X2Li = X2/L;
         LiX2 = L\X2';
